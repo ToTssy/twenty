@@ -2557,6 +2557,12 @@ export type CalendarChannelVisibility = 'METADATA' | 'SHARE_EVERYTHING'
 
 export type CalendarChannelContactAutoCreationPolicy = 'AS_PARTICIPANT_AND_ORGANIZER' | 'AS_PARTICIPANT' | 'AS_ORGANIZER' | 'NONE'
 
+export interface CalendarChannelOwner {
+    calendarChannelId: Scalars['UUID']
+    workspaceMemberId?: Scalars['UUID']
+    __typename: 'CalendarChannelOwner'
+}
+
 export interface MessageFolder {
     id: Scalars['UUID']
     name?: Scalars['String']
@@ -2675,6 +2681,7 @@ export interface Query {
     getViewGroup?: ViewGroup
     myMessageFolders: MessageFolder[]
     myCalendarChannels: CalendarChannel[]
+    calendarChannelOwners: CalendarChannelOwner[]
     minimalMetadata: MinimalMetadata
     appConnections: AppConnection[]
     appConnection: AppConnection
@@ -2721,7 +2728,7 @@ export interface Query {
 
 export type EventLogTable = 'WORKSPACE_EVENT' | 'PAGEVIEW' | 'OBJECT_EVENT' | 'USAGE_EVENT' | 'APPLICATION_LOG'
 
-export type UsageOperationType = 'AI_CHAT_TOKEN' | 'AI_WORKFLOW_TOKEN' | 'WORKFLOW_EXECUTION' | 'CODE_EXECUTION' | 'WEB_SEARCH'
+export type UsageOperationType = 'AI_CHAT_TOKEN' | 'AI_WORKFLOW_TOKEN' | 'WORKFLOW_EXECUTION' | 'CODE_EXECUTION' | 'WEB_SEARCH' | 'CALL_RECORDING'
 
 export interface Mutation {
     addQueryToEventStream: Scalars['Boolean']
@@ -5656,6 +5663,13 @@ export interface CalendarChannelGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface CalendarChannelOwnerGenqlSelection{
+    calendarChannelId?: boolean | number
+    workspaceMemberId?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface MessageFolderGenqlSelection{
     id?: boolean | number
     name?: boolean | number
@@ -5793,6 +5807,7 @@ export interface QueryGenqlSelection{
     getViewGroup?: (ViewGroupGenqlSelection & { __args: {id: Scalars['String']} })
     myMessageFolders?: (MessageFolderGenqlSelection & { __args?: {messageChannelId?: (Scalars['UUID'] | null)} })
     myCalendarChannels?: (CalendarChannelGenqlSelection & { __args?: {connectedAccountId?: (Scalars['UUID'] | null)} })
+    calendarChannelOwners?: (CalendarChannelOwnerGenqlSelection & { __args?: {calendarChannelIds?: (Scalars['UUID'][] | null)} })
     minimalMetadata?: MinimalMetadataGenqlSelection
     appConnections?: (AppConnectionGenqlSelection & { __args?: {filter?: (ListAppConnectionsInput | null)} })
     appConnection?: (AppConnectionGenqlSelection & { __args: {id: Scalars['ID']} })
@@ -6486,7 +6501,7 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
       if (!obj?.__typename) throw new Error('__typename is missing in "isBillingProductDTO"')
       return BillingProductDTO_possibleTypes.includes(obj.__typename)
     }
-    
+
 
 
     const ApiKey_possibleTypes: string[] = ['ApiKey']
@@ -6494,7 +6509,7 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
       if (!obj?.__typename) throw new Error('__typename is missing in "isApiKey"')
       return ApiKey_possibleTypes.includes(obj.__typename)
     }
-    
+
 
 
     const ApplicationRegistrationVariable_possibleTypes: string[] = ['ApplicationRegistrationVariable']
@@ -8425,6 +8440,14 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
     
 
 
+    const CalendarChannelOwner_possibleTypes: string[] = ['CalendarChannelOwner']
+    export const isCalendarChannelOwner = (obj?: { __typename?: any } | null): obj is CalendarChannelOwner => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCalendarChannelOwner"')
+      return CalendarChannelOwner_possibleTypes.includes(obj.__typename)
+    }
+
+
+
     const MessageFolder_possibleTypes: string[] = ['MessageFolder']
     export const isMessageFolder = (obj?: { __typename?: any } | null): obj is MessageFolder => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMessageFolder"')
@@ -9144,7 +9167,8 @@ export const enumUsageOperationType = {
    AI_WORKFLOW_TOKEN: 'AI_WORKFLOW_TOKEN' as const,
    WORKFLOW_EXECUTION: 'WORKFLOW_EXECUTION' as const,
    CODE_EXECUTION: 'CODE_EXECUTION' as const,
-   WEB_SEARCH: 'WEB_SEARCH' as const
+   WEB_SEARCH: 'WEB_SEARCH' as const,
+   CALL_RECORDING: 'CALL_RECORDING' as const
 }
 
 export const enumWorkspaceMigrationActionType = {

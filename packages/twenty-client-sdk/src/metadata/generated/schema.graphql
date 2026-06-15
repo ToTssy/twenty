@@ -2901,6 +2901,11 @@ enum CalendarChannelContactAutoCreationPolicy {
   NONE
 }
 
+type CalendarChannelOwner {
+  calendarChannelId: UUID!
+  workspaceMemberId: UUID
+}
+
 type MessageFolder {
   id: UUID!
   name: String
@@ -3075,6 +3080,7 @@ type Query {
   getViewGroup(id: String!): ViewGroup
   myMessageFolders(messageChannelId: UUID): [MessageFolder!]!
   myCalendarChannels(connectedAccountId: UUID): [CalendarChannel!]!
+  calendarChannelOwners(calendarChannelIds: [UUID!]): [CalendarChannelOwner!]!
   minimalMetadata: MinimalMetadata!
   appConnections(filter: ListAppConnectionsInput): [AppConnection!]!
   appConnection(id: ID!): AppConnection!
@@ -3199,6 +3205,7 @@ enum UsageOperationType {
   WORKFLOW_EXECUTION
   CODE_EXECUTION
   WEB_SEARCH
+  CALL_RECORDING
 }
 
 type Mutation {
