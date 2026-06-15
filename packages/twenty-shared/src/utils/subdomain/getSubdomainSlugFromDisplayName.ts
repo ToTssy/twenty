@@ -1,3 +1,5 @@
+import { slugify } from 'transliteration';
+
 import { isDefined } from '@/utils/validation/isDefined';
 
 const SUBDOMAIN_MIN_LENGTH = 3;
@@ -10,12 +12,11 @@ export const getSubdomainSlugFromDisplayName = (
     return undefined;
   }
 
-  const slug = displayName
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+  const slug = slugify(displayName, {
+    trim: true,
+    separator: '-',
+    allowedChars: 'a-zA-Z0-9',
+  })
     .slice(0, SUBDOMAIN_MAX_LENGTH)
     .replace(/-+$/g, '');
 

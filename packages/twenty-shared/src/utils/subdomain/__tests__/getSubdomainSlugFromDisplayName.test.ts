@@ -37,8 +37,8 @@ describe('getSubdomainSlugFromDisplayName', () => {
     expect(getSubdomainSlugFromDisplayName('!@#$%^&*()')).toBeUndefined();
   });
 
-  it('should return undefined for non-latin scripts that cannot be slugified', () => {
-    expect(getSubdomainSlugFromDisplayName('日本語')).toBeUndefined();
+  it('should transliterate non-latin scripts', () => {
+    expect(getSubdomainSlugFromDisplayName('日本語')).toBe('ri-ben-yu');
   });
 
   it('should return undefined when the result is shorter than the minimum length', () => {
