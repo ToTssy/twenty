@@ -20,8 +20,10 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
+      # Start with the server container; don't block on health (proxies 502 until
+      # the server is ready, same as before, but Caddy won't be left stopped).
       server:
-        condition: service_healthy
+        condition: service_started
 
   server:
     image: registry.digitalocean.com/totssy/twenty:${TAG:-prod}
@@ -54,10 +56,12 @@ services:
       - server-local-data:/app/packages/twenty-server/.local-storage
       - ./do-ca.crt:/etc/ssl/do-ca.crt:ro
     depends_on:
-      server:
-        condition: service_healthy
+      # Worker needs the DB + Redis queue, NOT the HTTP server. Don't block on
+      # server health (it boots slowly) or the worker gets left stopped on restart.
       redis:
         condition: service_healthy
+      server:
+        condition: service_started
 
   redis:
     image: redis:7
