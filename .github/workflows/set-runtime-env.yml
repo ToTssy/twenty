@@ -1,0 +1,39 @@
+name: set-runtime-env
+
+# Manual one-shot: write runtime env (e.g. SMTP) into the droplet's .env and
+# restart the app. Runs from a GitHub runner, so it works even when an operator's
+# own network blocks outbound SSH. Secrets hold the sensitive values.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  set-smtp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: write SMTP env + restart app
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          envs: RESEND_API_KEY
+          script: |
+            cd /opt/the-rift/twenty
+            sed -i '/^EMAIL_/d' .env
+            {
+              echo "EMAIL_DRIVER=smtp"
+              echo "EMAIL_SMTP_HOST=smtp.resend.com"
+              echo "EMAIL_SMTP_PORT=587"
+              echo "EMAIL_SMTP_USER=resend"
+              echo "EMAIL_SMTP_PASSWORD=$RESEND_API_KEY"
+              echo "EMAIL_FROM_ADDRESS=noreply@send.totssy.com"
+              echo "EMAIL_FROM_NAME=Totssy CRM"
+            } >> .env
+            docker compose up -d server worker
+            echo "EMAIL_ lines now:"; grep -c '^EMAIL_' .env
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
