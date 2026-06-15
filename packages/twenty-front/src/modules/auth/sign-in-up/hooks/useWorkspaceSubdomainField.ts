@@ -17,7 +17,6 @@ export type SubdomainFieldStatus =
 
 const AVAILABILITY_CHECK_DEBOUNCE_MS = 400;
 
-// Common free email providers we don't want to seed a subdomain from.
 const FREE_EMAIL_DOMAIN_LABELS = new Set([
   'gmail',
   'googlemail',
@@ -51,9 +50,6 @@ const getSeedBaseFromEmail = (email?: string): string | undefined => {
   return getSubdomainSlugFromDisplayName(domainLabel);
 };
 
-// Powers the onboarding subdomain picker: auto-fills an available subdomain from
-// the workspace name (seeded from the user's work email) until the user takes
-// manual control, then reports live availability of the manually typed value.
 export const useWorkspaceSubdomainField = ({
   workspaceName,
   seedEmail,
@@ -76,8 +72,6 @@ export const useWorkspaceSubdomainField = ({
 
   const seedBase = useMemo(() => getSeedBaseFromEmail(seedEmail), [seedEmail]);
 
-  // While the user hasn't taken control, the name drives the subdomain, falling
-  // back to the email-derived seed before any name is typed.
   const autofillBase = isManuallyEdited
     ? undefined
     : (getSubdomainSlugFromDisplayName(workspaceName) ?? seedBase);
@@ -92,7 +86,6 @@ export const useWorkspaceSubdomainField = ({
     AVAILABILITY_CHECK_DEBOUNCE_MS,
   );
 
-  // Autofill flow: adopt the available suggestion derived from name/email.
   useEffect(() => {
     if (isManuallyEdited) {
       return;
@@ -138,7 +131,6 @@ export const useWorkspaceSubdomainField = ({
     };
   }, [debouncedAutofillBase, isManuallyEdited, checkAvailabilityQuery]);
 
-  // Manual flow: report availability for the value the user typed.
   useEffect(() => {
     if (
       !isManuallyEdited ||
@@ -209,7 +201,6 @@ export const useWorkspaceSubdomainField = ({
   const handleSubdomainChange = (value: string) => {
     const normalized = value.trim().toLowerCase();
 
-    // Clearing the field hands control back to name-based autofill.
     if (normalized === '') {
       setIsManuallyEdited(false);
       setSubdomain('');

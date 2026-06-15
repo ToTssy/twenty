@@ -507,8 +507,6 @@ export class SignInUpService {
 
     const requestedSubdomain = options?.subdomain;
 
-    // Validate the user-chosen subdomain up front for a clean error; the unique
-    // constraint on the column is the backstop against concurrent sign-ups.
     if (isDefined(requestedSubdomain)) {
       await this.subdomainManagerService.validateSubdomainOrThrow(
         requestedSubdomain,

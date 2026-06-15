@@ -503,9 +503,6 @@ export class AuthResolver {
     };
   }
 
-  // Workspace-agnostic: lets the workspace-creation step (still on the central
-  // domain) validate and suggest a subdomain as the user types, so the chosen
-  // subdomain is final before the single redirect onto it.
   @Query(() => SubdomainAvailabilityDTO)
   @UseGuards(UserAuthGuard, NoPermissionGuard)
   async checkWorkspaceSubdomainAvailability(

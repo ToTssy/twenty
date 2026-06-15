@@ -10,7 +10,6 @@ import { Repository } from 'typeorm';
 import { type SubdomainAvailabilityDTO } from 'src/engine/core-modules/domain/subdomain-manager/dtos/subdomain-availability.dto';
 import { generateRandomSubdomain } from 'src/engine/core-modules/domain/subdomain-manager/utils/generate-random-subdomain.util';
 import { getSubdomainFromEmail } from 'src/engine/core-modules/domain/subdomain-manager/utils/get-subdomain-from-email.util';
-import { getSubdomainNameFromDisplayName } from 'src/engine/core-modules/domain/subdomain-manager/utils/get-subdomain-name-from-display-name.util';
 import { isSubdomainValid } from 'src/engine/core-modules/domain/subdomain-manager/utils/is-subdomain-valid.util';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
@@ -20,7 +19,6 @@ import {
 } from 'src/engine/core-modules/workspace/workspace.exception';
 
 const SUBDOMAIN_MAX_LENGTH = 30;
-// How many friendly "-2", "-3"... variants to try before giving up on the base.
 const MAX_NUMBERED_SUFFIX_ATTEMPTS = 50;
 const MAX_RANDOM_FALLBACK_ATTEMPTS = 10;
 
@@ -41,7 +39,7 @@ export class SubdomainManagerService {
   }) {
     const extractedSubdomain =
       getSubdomainFromEmail(userEmail) ||
-      getSubdomainNameFromDisplayName(workspaceDisplayName);
+      getSubdomainSlugFromDisplayName(workspaceDisplayName);
 
     const base =
       isDefined(extractedSubdomain) && isSubdomainValid(extractedSubdomain)
@@ -51,10 +49,6 @@ export class SubdomainManagerService {
     return this.findAvailableSubdomain(base);
   }
 
-  // Returns the first available subdomain at or after `desired`, preferring
-  // friendly numbered variants (foo, foo-2, foo-3...) and only falling back to a
-  // randomly generated name when nothing usable can be derived. The returned
-  // subdomain is always valid and available.
   async findAvailableSubdomain(desired: string): Promise<string> {
     const derivedBase = isSubdomainValid(desired)
       ? desired
@@ -88,8 +82,6 @@ export class SubdomainManagerService {
     return generateRandomSubdomain();
   }
 
-  // Drives the "as you type" subdomain picker: tells whether the requested
-  // subdomain is well-formed and free, and always offers a usable suggestion.
   async getSubdomainAvailability(
     subdomain: string,
   ): Promise<SubdomainAvailabilityDTO> {
