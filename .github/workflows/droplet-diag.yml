@@ -1,0 +1,30 @@
+name: droplet-diag
+
+# One-shot diagnostics: dump container state + email-related logs from the
+# droplet (run from a GitHub runner so it works when operator SSH is blocked).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          command_timeout: 8m
+          script: |
+            cd /opt/the-rift/twenty
+            echo "===== PS (before) ====="; docker compose ps
+            echo "===== ENSURE ALL UP ====="; docker compose up -d
+            sleep 8
+            echo "===== PS (after) ====="; docker compose ps
+            echo "===== EMAIL CONFIG (masked) ====="; sed -E 's/(PASSWORD=).*/\1****/' .env | grep '^EMAIL_'
+            echo "===== WORKER LOGS (tail 140) ====="; docker compose logs worker --tail 140 2>&1 | tail -140
+            echo "===== SERVER EMAIL/SMTP LOGS ====="; docker compose logs server --tail 400 2>&1 | grep -iE "email|smtp|mail|nodemailer|invite|resend|EAUTH|ECONN|ETIMEDOUT|535|421|sender|getaddrinfo|from address" | tail -50
