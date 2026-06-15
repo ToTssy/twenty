@@ -50,6 +50,8 @@ import { JwtTokenTypeEnum } from 'src/engine/core-modules/auth/types/jwt-token-t
 import { LoginTokenJwtPayload } from 'src/engine/core-modules/auth/types/login-token-jwt-payload.type';
 import { CaptchaGuard } from 'src/engine/core-modules/captcha/captcha.guard';
 import { CaptchaGraphqlApiExceptionFilter } from 'src/engine/core-modules/captcha/filters/captcha-graphql-api-exception.filter';
+import { SubdomainAvailabilityDTO } from 'src/engine/core-modules/domain/subdomain-manager/dtos/subdomain-availability.dto';
+import { SubdomainManagerService } from 'src/engine/core-modules/domain/subdomain-manager/services/subdomain-manager.service';
 import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspace-domains/services/workspace-domains.service';
 import { EmailVerificationExceptionFilter } from 'src/engine/core-modules/email-verification/email-verification-exception-filter.util';
 import { EmailVerificationTrigger } from 'src/engine/core-modules/email-verification/email-verification.constants';
@@ -84,6 +86,7 @@ import { AuthToken } from './dto/auth-token.dto';
 import { AuthTokens } from './dto/auth-tokens.dto';
 import { GetAuthTokensFromLoginTokenInput } from './dto/get-auth-tokens-from-login-token.input';
 import { LoginTokenDTO } from './dto/login-token.dto';
+import { SignUpInNewWorkspaceInput } from './dto/sign-up-in-new-workspace.input';
 import { SignUpInput } from './dto/sign-up.input';
 import { UserCredentialsInput } from './dto/user-credentials.input';
 import { CheckUserExistDTO } from './dto/user-exists.dto';
@@ -127,6 +130,7 @@ export class AuthResolver {
     private ssoService: SSOService,
     private readonly eventLogEmitterService: EventLogEmitterService,
     private readonly permissionsService: PermissionsService,
+    private readonly subdomainManagerService: SubdomainManagerService,
   ) {}
 
   @UseGuards(CaptchaGuard, PublicEndpointGuard, NoPermissionGuard)
@@ -499,16 +503,29 @@ export class AuthResolver {
     };
   }
 
+  // Workspace-agnostic: lets the workspace-creation step (still on the central
+  // domain) validate and suggest a subdomain as the user types, so the chosen
+  // subdomain is final before the single redirect onto it.
+  @Query(() => SubdomainAvailabilityDTO)
+  @UseGuards(UserAuthGuard, NoPermissionGuard)
+  async checkWorkspaceSubdomainAvailability(
+    @Args('subdomain') subdomain: string,
+  ): Promise<SubdomainAvailabilityDTO> {
+    return this.subdomainManagerService.getSubdomainAvailability(subdomain);
+  }
+
   @Mutation(() => SignUpDTO)
   @UseGuards(UserAuthGuard, NoPermissionGuard)
   async signUpInNewWorkspace(
     @AuthUser() currentUser: AuthContextUser,
     @AuthProvider() authProvider: AuthProviderEnum,
+    @Args('input', { nullable: true }) input?: SignUpInNewWorkspaceInput,
   ): Promise<SignUpDTO> {
     const fullUser = await this.userService.findUserByIdOrThrow(currentUser.id);
 
     const { user, workspace } = await this.signInUpService.signUpOnNewWorkspace(
       { type: 'existingUser', existingUser: fullUser },
+      { displayName: input?.displayName, subdomain: input?.subdomain },
     );
 
     const loginToken = await this.loginTokenService.generateLoginToken(

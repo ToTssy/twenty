@@ -91,7 +91,9 @@ export const CreateWorkspace = () => {
   } = useForm<Form>({
     mode: 'onChange',
     defaultValues: {
-      name: '',
+      // Pre-filled from the name chosen during sign-up; the user can still tweak
+      // it here before their workspace is created.
+      name: currentWorkspace?.displayName ?? '',
     },
     resolver: zodResolver(validationSchema),
   });

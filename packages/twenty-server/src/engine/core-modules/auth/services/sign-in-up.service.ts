@@ -486,6 +486,7 @@ export class SignInUpService {
 
   async signUpOnNewWorkspace(
     userData: ExistingUserOrPartialUserWithPicture['userData'],
+    options?: { displayName?: string; subdomain?: string },
   ) {
     const email =
       userData.type === 'newUserWithPicture'
@@ -504,6 +505,16 @@ export class SignInUpService {
 
     await this.assertWorkspaceCreationAllowed(userData);
 
+    const requestedSubdomain = options?.subdomain;
+
+    // Validate the user-chosen subdomain up front for a clean error; the unique
+    // constraint on the column is the backstop against concurrent sign-ups.
+    if (isDefined(requestedSubdomain)) {
+      await this.subdomainManagerService.validateSubdomainOrThrow(
+        requestedSubdomain,
+      );
+    }
+
     const shouldGrantServerAdmin = !(await this.hasServerAdmin());
 
     const isWorkEmailFound = isWorkEmail(email);
@@ -518,11 +529,13 @@ export class SignInUpService {
 
           const workspaceToCreate = this.workspaceRepository.create({
             id: workspaceId,
-            subdomain: await this.subdomainManagerService.generateSubdomain(
-              isWorkEmailFound ? { userEmail: email } : {},
-            ),
+            subdomain: isDefined(requestedSubdomain)
+              ? requestedSubdomain
+              : await this.subdomainManagerService.generateSubdomain(
+                  isWorkEmailFound ? { userEmail: email } : {},
+                ),
             workspaceCustomApplicationId,
-            displayName: '',
+            displayName: options?.displayName ?? '',
             inviteHash: v4(),
             activationStatus: WorkspaceActivationStatus.PENDING_CREATION,
           });
