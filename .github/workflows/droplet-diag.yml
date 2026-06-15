@@ -21,10 +21,11 @@ jobs:
           command_timeout: 8m
           script: |
             cd /opt/the-rift/twenty
-            echo "===== PS (before) ====="; docker compose ps
-            echo "===== ENSURE ALL UP ====="; docker compose up -d
-            sleep 8
-            echo "===== PS (after) ====="; docker compose ps
+            echo "===== PS ====="; docker compose ps
             echo "===== EMAIL CONFIG (masked) ====="; sed -E 's/(PASSWORD=).*/\1****/' .env | grep '^EMAIL_'
-            echo "===== WORKER LOGS (tail 140) ====="; docker compose logs worker --tail 140 2>&1 | tail -140
-            echo "===== SERVER EMAIL/SMTP LOGS ====="; docker compose logs server --tail 400 2>&1 | grep -iE "email|smtp|mail|nodemailer|invite|resend|EAUTH|ECONN|ETIMEDOUT|535|421|sender|getaddrinfo|from address" | tail -50
+            echo "===== WORKER: email/smtp/error lines (last 80) ====="
+            docker compose logs worker --tail 1200 2>&1 | grep -iE "email|smtp|mail|nodemailer|invit|resend|workspaceMember|EAUTH|ECONN|ETIMEDOUT|EENVELOPE|535|421|454|TLS|cert|self-signed|sender|getaddrinfo|from |error|exception|fail|reject" | tail -80
+            echo "===== WORKER: raw tail 60 ====="
+            docker compose logs worker --tail 60 2>&1 | tail -60
+            echo "===== SERVER: email/smtp lines (last 40) ====="
+            docker compose logs server --tail 600 2>&1 | grep -iE "email|smtp|nodemailer|invit|resend|EAUTH|ECONN|ETIMEDOUT|535|421|TLS|self-signed|sender|from address|error.*mail|mail.*error" | tail -40
