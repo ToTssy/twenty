@@ -39,6 +39,7 @@ jobs:
         with:
           context: .
           file: packages/twenty-docker/twenty/Dockerfile
+          target: twenty   # backend + frontend, NO bundled postgres/redis (default last stage is the all-in-one image)
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE }}:staging
